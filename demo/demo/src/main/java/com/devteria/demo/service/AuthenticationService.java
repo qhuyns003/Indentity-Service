@@ -1,4 +1,4 @@
-package com.devteria.demo.service.impl;
+package com.devteria.demo.service;
 
 import com.devteria.demo.dto.request.AuthenticationRequest;
 import com.devteria.demo.dto.request.IntrospectRequest;
@@ -6,8 +6,8 @@ import com.devteria.demo.dto.response.IntrospectResponse;
 import com.devteria.demo.entity.UserEntity;
 import com.devteria.demo.exception.AppException;
 import com.devteria.demo.exception.ErrorCode;
+import com.devteria.demo.repository.RoleRepository;
 import com.devteria.demo.repository.UserRepositoryInterface;
-import com.devteria.demo.service.AuthenticationInterface;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -22,6 +22,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -33,27 +34,28 @@ import java.util.StringJoiner;
 @Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthenticationImpl implements AuthenticationInterface {
+public class AuthenticationService  {
     final UserRepositoryInterface userRepository;
+    final RoleRepository roleRepository;
 
     @Value("${jwt.signerKey}")
     @NonFinal
     String SIGNER_KEY;
 
-    @Override
+
     public String authenticateUser(AuthenticationRequest authenticationRequest) {
         UserEntity user = userRepository.findByUsername(authenticationRequest.getUsername()).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
 
         boolean authenticated = passwordEncoder.matches(authenticationRequest.getPassword(),user.getPassword());
         if(!authenticated){
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
         return generateToken(user);
 
     }
 
-    @Override
+
     public IntrospectResponse introspectUser(IntrospectRequest introspectRequest) throws JOSEException, ParseException {
         var token = introspectRequest.getToken();
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
@@ -64,7 +66,7 @@ public class AuthenticationImpl implements AuthenticationInterface {
         return IntrospectResponse.builder()
                 .valid(expirationTime.after(new Date()) && signedJWT.verify(verifier))
                 .build();
-    // kiem tar thu cong khogn dung oauth2
+        // kiem tar thu cong khogn dung oauth2
     };
 
 
@@ -94,7 +96,12 @@ public class AuthenticationImpl implements AuthenticationInterface {
     String buildScope(UserEntity user){
         StringJoiner stringJoiner = new StringJoiner(" ");
         if(!user.getRoles().isEmpty()){
-            user.getRoles().forEach(stringJoiner::add);
+//            user.getRoles().forEach(stringJoiner::add);
+            user.getRoles().forEach(
+                    role -> {stringJoiner.add("ROLE_"+role.getName());
+                        if(!CollectionUtils.isEmpty(role.getPermissions()))
+                            role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
+                    });
         }
         return stringJoiner.toString();
     }

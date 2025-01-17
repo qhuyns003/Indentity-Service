@@ -5,8 +5,7 @@ import com.devteria.demo.dto.request.IntrospectRequest;
 import com.devteria.demo.dto.response.ApiResponse;
 import com.devteria.demo.dto.response.AuthenticationResponse;
 import com.devteria.demo.dto.response.IntrospectResponse;
-import com.devteria.demo.service.impl.AuthenticationImpl;
-import com.devteria.demo.service.impl.UserServiceImpl;
+import com.devteria.demo.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ import java.text.ParseException;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationController {
-    AuthenticationImpl authentication;
+    AuthenticationService authentication;
 
     @PostMapping("/log-in")
     ApiResponse<AuthenticationResponse> authenticationUser(@RequestBody AuthenticationRequest authenticationRequest) {

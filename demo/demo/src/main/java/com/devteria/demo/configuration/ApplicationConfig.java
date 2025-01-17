@@ -1,7 +1,10 @@
 package com.devteria.demo.configuration;
 
+import com.devteria.demo.entity.Role;
 import com.devteria.demo.entity.UserEntity;
-import com.devteria.demo.enums.Role;
+import com.devteria.demo.exception.AppException;
+import com.devteria.demo.exception.ErrorCode;
+import com.devteria.demo.repository.RoleRepository;
 import com.devteria.demo.repository.UserRepositoryInterface;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -19,18 +22,20 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ApplicationConfig {
 
+    final RoleRepository roleRepository;
     final PasswordEncoder passwordEncoder;
     @Bean
     ApplicationRunner applicationRunner(UserRepositoryInterface userRepository) {
 
         return args -> {
             if(userRepository.findByUsername("admin").isEmpty()){
-                Set<String> roles = new HashSet<>();
-                roles.add(Role.ADMIN.name());
+                Set<com.devteria.demo.entity.Role> roles = new HashSet<>();
+//                Role role = roleRepository.findById(com.devteria.demo.enums.Role.ADMIN.name()).orElseThrow(()-> new AppException(ErrorCode.ROLE_NOT_FOUND));
+//                roles.add(role);
                 UserEntity user = UserEntity.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin"))
-                        .roles(roles)
+//                        .roles(roles)
                         .build();
                 userRepository.save(user);
 

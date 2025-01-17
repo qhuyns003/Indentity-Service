@@ -1,6 +1,5 @@
-package com.devteria.demo.service.impl;
+package com.devteria.demo.service;
 
-import com.devteria.demo.dto.request.AuthenticationRequest;
 import com.devteria.demo.dto.request.UserCreateRequest;
 import com.devteria.demo.dto.request.UserUpdateRequest;
 import com.devteria.demo.dto.response.UserResponse;
@@ -8,10 +7,15 @@ import com.devteria.demo.entity.UserEntity;
 import com.devteria.demo.enums.Role;
 import com.devteria.demo.exception.ErrorCode;
 import com.devteria.demo.exception.AppException;
+import com.devteria.demo.mapper.RoleMapper;
 import com.devteria.demo.mapper.UserMapper;
+import com.devteria.demo.repository.RoleRepository;
 import com.devteria.demo.repository.UserRepositoryInterface;
-import com.devteria.demo.service.UserServiceInterface;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,12 +28,20 @@ import java.util.Set;
 
 @Service
 @Transactional
-public class UserServiceImpl implements UserServiceInterface {
+@Slf4j
+public class UserService {
     @Autowired
     private UserRepositoryInterface userRepository;
     @Autowired
     private UserMapper userMapper;
-    @Override
+
+    @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
+    private RoleMapper roleMapper;
+
+
     public UserEntity createUser(UserCreateRequest userCreateRequest) {
         UserEntity userEntity = userMapper.toUser(userCreateRequest);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
@@ -38,14 +50,17 @@ public class UserServiceImpl implements UserServiceInterface {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
         Set<String> roles = new HashSet<>();
-        roles.add(Role.USER.name());
-        userEntity.setRoles(roles);
+//        roles.add(Role.USER.name());
+//        userEntity.setRoles(roles);
 
         return userRepository.save(userEntity);
     }
 
-    @Override
+
+
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UserResponse> getUser() {
+        log.info("pass");
         List<UserEntity> userEntity = userRepository.findAll();
         List<UserResponse> userResponses = new ArrayList<>();
         for(UserEntity userEntity1 : userEntity) {
@@ -54,7 +69,8 @@ public class UserServiceImpl implements UserServiceInterface {
         return  userResponses;
     }
 
-    @Override
+
+    @PostAuthorize("returnObject.username = authentication.name")
     public UserResponse getUser(String id) {
         UserEntity userEntity= userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         UserResponse userResponse = userMapper.toUserResponse(userEntity);
@@ -62,20 +78,32 @@ public class UserServiceImpl implements UserServiceInterface {
         return userResponse;
     }
 
-    @Override
+
     public UserResponse updateUser(String id, UserUpdateRequest userUpdateRequest) {
         UserEntity userEntity=userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         userMapper.updateUser(userEntity, userUpdateRequest);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         userEntity.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
-        return userMapper.toUserResponse(userRepository.save(userEntity));
+//        userEntity.setRoles(new HashSet<>(userUpdateRequest.getRoles().stream().map(role ->roleRepository.findById(role).orElseThrow(()->new AppException(ErrorCode.PASSWORD_INVALID))).toList()));
+        userEntity.setRoles(new HashSet<>(roleRepository.findAllById(userUpdateRequest.getRoles())));
+        UserResponse userResponse = userMapper.toUserResponse(userRepository.save(userEntity));
+        userResponse.setRoles(new HashSet<>(userEntity.getRoles().stream().map(roleMapper::toResponse).toList()));
+
+        return userResponse;
     }
 
-    @Override
+
     public void deleteUser(String id) {
         userRepository.deleteById(id);
     }
 
+
+    public UserResponse getMyInfo() {
+        String id = SecurityContextHolder.getContext().getAuthentication().getName();
+        UserEntity userEntity = userRepository.findByUsername(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        UserResponse userResponse = userMapper.toUserResponse(userEntity);
+        return userResponse;
+    }
 
 
 }

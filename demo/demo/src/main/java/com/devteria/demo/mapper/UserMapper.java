@@ -13,9 +13,10 @@ public interface UserMapper {
 
 //    @Mapping(target = "lastName",ignore = true)
     UserEntity toUser(UserCreateRequest userCreateRequest);
-
+    @Mapping(target = "roles", ignore = true)
     void updateUser(@MappingTarget UserEntity userEntity , UserUpdateRequest userUpdateRequest);
 
 //    @Mapping(source = "firstName",target = "lastName")
+    @Mapping(target = "roles", ignore = true)
     UserResponse toUserResponse(UserEntity userEntity);
 }
