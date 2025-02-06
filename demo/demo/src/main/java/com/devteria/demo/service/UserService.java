@@ -3,8 +3,8 @@ package com.devteria.demo.service;
 import com.devteria.demo.dto.request.UserCreateRequest;
 import com.devteria.demo.dto.request.UserUpdateRequest;
 import com.devteria.demo.dto.response.UserResponse;
+import com.devteria.demo.entity.Role;
 import com.devteria.demo.entity.UserEntity;
-import com.devteria.demo.enums.Role;
 import com.devteria.demo.exception.ErrorCode;
 import com.devteria.demo.exception.AppException;
 import com.devteria.demo.mapper.RoleMapper;
@@ -42,7 +42,7 @@ public class UserService {
     private RoleMapper roleMapper;
 
 
-    public UserEntity createUser(UserCreateRequest userCreateRequest) {
+    public UserResponse createUser(UserCreateRequest userCreateRequest) {
         UserEntity userEntity = userMapper.toUser(userCreateRequest);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         userEntity.setPassword(passwordEncoder.encode(userCreateRequest.getPassword()));
@@ -53,7 +53,7 @@ public class UserService {
 //        roles.add(Role.USER.name());
 //        userEntity.setRoles(roles);
 
-        return userRepository.save(userEntity);
+        return userMapper.toUserResponse(userRepository.save(userEntity));
     }
 
 
@@ -80,12 +80,14 @@ public class UserService {
 
 
     public UserResponse updateUser(String id, UserUpdateRequest userUpdateRequest) {
-        UserEntity userEntity=userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        UserEntity userEntity=userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         userMapper.updateUser(userEntity, userUpdateRequest);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         userEntity.setPassword(passwordEncoder.encode(userUpdateRequest.getPassword()));
 //        userEntity.setRoles(new HashSet<>(userUpdateRequest.getRoles().stream().map(role ->roleRepository.findById(role).orElseThrow(()->new AppException(ErrorCode.PASSWORD_INVALID))).toList()));
-        userEntity.setRoles(new HashSet<>(roleRepository.findAllById(userUpdateRequest.getRoles())));
+       List<Role> l = roleRepository.findAllById(userUpdateRequest.getRoles());
+        HashSet< Role> rr = new HashSet<>(l);
+        userEntity.setRoles(rr);
         UserResponse userResponse = userMapper.toUserResponse(userRepository.save(userEntity));
         userResponse.setRoles(new HashSet<>(userEntity.getRoles().stream().map(roleMapper::toResponse).toList()));
 

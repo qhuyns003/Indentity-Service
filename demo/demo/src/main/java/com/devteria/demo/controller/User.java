@@ -7,18 +7,20 @@ import com.devteria.demo.dto.response.UserResponse;
 import com.devteria.demo.entity.UserEntity;
 import com.devteria.demo.service.UserService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 public class User {
     @Autowired
     private UserService userService;
     @PostMapping("/users")
-    ApiResponse<UserEntity> createUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
-       return ApiResponse.<UserEntity>builder()
+    ApiResponse<UserResponse> createUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
+       return ApiResponse.<UserResponse>builder()
                .result(userService.createUser(userCreateRequest))
                .build();
     }
@@ -51,6 +53,7 @@ public class User {
     @DeleteMapping("/{userId}")
     ApiResponse<String> deleteUser(@PathVariable String userId) {
         userService.deleteUser(userId);
+        log.info("Delete users controller ...");
         return ApiResponse.<String>builder()
                 .result("User deleted")
                 .build();
