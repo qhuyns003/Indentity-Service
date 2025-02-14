@@ -1,14 +1,15 @@
 package com.devteria.demo.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import com.devteria.demo.dto.request.PermissionRequest;
 import com.devteria.demo.dto.response.ApiResponse;
 import com.devteria.demo.dto.response.PermissionResponse;
 import com.devteria.demo.mapper.PermissionMapper;
 import com.devteria.demo.service.PermissionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequestMapping("/permissions")
 @RestController
@@ -29,9 +30,7 @@ public class PermissionController {
     @DeleteMapping("/{id}")
     ApiResponse<String> deletePermission(@PathVariable String id) {
         permissionService.deletePermission(id);
-        return ApiResponse.<String>builder()
-                .result("succesfully deleted")
-                .build();
+        return ApiResponse.<String>builder().result("succesfully deleted").build();
     }
 
     @PostMapping
@@ -40,6 +39,4 @@ public class PermissionController {
                 .result(permissionService.createPermission(permissionRequest))
                 .build();
     }
-
-
 }

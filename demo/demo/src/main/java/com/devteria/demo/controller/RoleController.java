@@ -1,15 +1,16 @@
 package com.devteria.demo.controller;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import com.devteria.demo.dto.request.RoleRequest;
 import com.devteria.demo.dto.request.RoleUpdateRequest;
 import com.devteria.demo.dto.response.ApiResponse;
 import com.devteria.demo.dto.response.RoleResponse;
 import com.devteria.demo.mapper.RoleMapper;
 import com.devteria.demo.service.RoleService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequestMapping("/roles")
 @RestController
@@ -30,9 +31,7 @@ public class RoleController {
     @DeleteMapping("/{id}")
     ApiResponse<String> deleteRole(@PathVariable String id) {
         roleService.deleteRole(id);
-        return ApiResponse.<String>builder()
-                .result("succesfully deleted")
-                .build();
+        return ApiResponse.<String>builder().result("succesfully deleted").build();
     }
 
     @PostMapping
@@ -43,11 +42,9 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    ApiResponse<RoleResponse> updateRole(@PathVariable String id,@RequestBody RoleUpdateRequest roleUpdateRequest) {
+    ApiResponse<RoleResponse> updateRole(@PathVariable String id, @RequestBody RoleUpdateRequest roleUpdateRequest) {
         return ApiResponse.<RoleResponse>builder()
-                .result(roleService.updateRole(id,roleUpdateRequest))
+                .result(roleService.updateRole(id, roleUpdateRequest))
                 .build();
     }
-
-
 }

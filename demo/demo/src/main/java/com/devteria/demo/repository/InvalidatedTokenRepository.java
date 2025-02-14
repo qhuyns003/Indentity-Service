@@ -1,10 +1,9 @@
 package com.devteria.demo.repository;
 
-import com.devteria.demo.entity.InvalidatedToken;
-import com.devteria.demo.entity.Permission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.devteria.demo.entity.InvalidatedToken;
+
 @Repository
-public interface InvalidatedTokenRepository extends JpaRepository<InvalidatedToken, String> {
-}
+public interface InvalidatedTokenRepository extends JpaRepository<InvalidatedToken, String> {}

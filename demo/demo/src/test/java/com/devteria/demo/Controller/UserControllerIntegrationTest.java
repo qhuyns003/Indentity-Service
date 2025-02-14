@@ -1,26 +1,19 @@
 package com.devteria.demo.Controller;
 
-import com.devteria.demo.dto.request.UserCreateRequest;
-import com.devteria.demo.dto.request.UserUpdateRequest;
-import com.devteria.demo.dto.response.UserResponse;
-import com.devteria.demo.entity.UserEntity;
-import com.devteria.demo.repository.UserRepositoryInterface;
-import com.devteria.demo.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -28,15 +21,20 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import com.devteria.demo.dto.request.UserCreateRequest;
+import com.devteria.demo.dto.request.UserUpdateRequest;
+import com.devteria.demo.dto.response.UserResponse;
+import com.devteria.demo.repository.UserRepositoryInterface;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-public class UserControllerIntegrationTest {
+class UserControllerIntegrationTest {
 
     @Container
     static final MySQLContainer<?> MY_SQL_CONTAINER = new MySQLContainer<>("mysql:latest");
@@ -46,9 +44,10 @@ public class UserControllerIntegrationTest {
         registry.add("spring.datasource.url", MY_SQL_CONTAINER::getJdbcUrl);
         registry.add("spring.datasource.username", MY_SQL_CONTAINER::getUsername);
         registry.add("spring.datasource.password", MY_SQL_CONTAINER::getPassword);
-        registry.add("spring.datasource.driverClassName", ()->"com.mysql.cj.jdbc.Driver");
-        registry.add("spring.jpa.hibernate.ddl-auto", ()->"update");
+        registry.add("spring.datasource.driverClassName", () -> "com.mysql.cj.jdbc.Driver");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "update");
     }
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -56,24 +55,16 @@ public class UserControllerIntegrationTest {
     private UserResponse userResponse;
     private UserUpdateRequest userUpdateRequest;
     private List<UserResponse> userResponseList;
-    private String userId;
 
     @Autowired
     private UserRepositoryInterface userRepositoryInterface;
 
-
-
     @BeforeEach
-    void initData(){
+    void initData() {
 
-        UserEntity userEntity = UserEntity.builder()
-                .username("12345")
-                .build();
-        userRepositoryInterface.save(userEntity);
         HashSet<String> roles = new HashSet<>();
         roles.add("ROLE_ADMIN");
-        LocalDate dob= LocalDate.of(2000,2,2);
-
+        LocalDate dob = LocalDate.of(2000, 2, 2);
         userCreateRequest = UserCreateRequest.builder()
                 .username("admin1")
                 .password("123456")
@@ -84,7 +75,7 @@ public class UserControllerIntegrationTest {
 
         userResponse = UserResponse.builder()
                 .id("test01010101")
-                .username("admin")
+                .username("admin1")
                 .firstName("Ad")
                 .lastName("min")
                 .dob(dob)
@@ -100,175 +91,97 @@ public class UserControllerIntegrationTest {
 
         userResponseList = new ArrayList<>();
         userResponseList.add(userResponse);
-
-        userId = "test01010101";
-
     }
 
     @Test
     void createUser_validRequest_success() throws Exception {
-        //GIVEN
+        // GIVEN
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         String request = objectMapper.writeValueAsString(userCreateRequest);
-        mockMvc.perform(MockMvcRequestBuilders
-                .post("/users")
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(request))
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(request))
                 .andExpect(MockMvcResultMatchers.status().isOk());
-
     }
 
     @Test
     void createUser_username_failed() throws Exception {
-        //GIVEN
+        // GIVEN
         userCreateRequest.setUsername("adm");
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         String request = objectMapper.writeValueAsString(userCreateRequest);
 
-        //WHEN THEN
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/users")
+        // WHEN THEN
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(request))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("code").value(1003));
-
     }
 
     @Test
     void createUser_password_failed() throws Exception {
-        //GIVEN
+        // GIVEN
         userCreateRequest.setPassword("1");
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         String request = objectMapper.writeValueAsString(userCreateRequest);
 
-        //WHEN THEN
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/users")
+        // WHEN THEN
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(request))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("code").value(1004));
-
     }
 
     @Test
     void createUser_dob_failed() throws Exception {
-        LocalDate dob= LocalDate.now();
-        //GIVEN
+        LocalDate dob = LocalDate.now();
+        // GIVEN
         userCreateRequest.setDob(dob);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         String request = objectMapper.writeValueAsString(userCreateRequest);
 
-        //WHEN THEN
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post("/users")
+        // WHEN THEN
+        mockMvc.perform(MockMvcRequestBuilders.post("/users")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(request))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
                 .andExpect(MockMvcResultMatchers.jsonPath("code").value(1010));
-
     }
 
     @Test
-    @WithMockUser(username = "testuser", roles = {"USER"})
+    @WithMockUser(
+            username = "testuser",
+            roles = {"USER"})
     void deleteUser_validRequest_success() throws Exception {
-        //WHEN THEN
-        mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/123"))
-                        .andExpect(MockMvcResultMatchers.status().isOk());
-
+        // WHEN THEN
+        mockMvc.perform(MockMvcRequestBuilders.delete("/123"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     @Test
-    @WithMockUser(username = "testuser", roles = {"USER"})
+    @WithMockUser(
+            username = "testuser",
+            roles = {"USER"})
     void updateUser_validRequest_success() throws Exception {
-        //GIVEN
+        // GIVEN
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         String request = objectMapper.writeValueAsString(userUpdateRequest);
-//
-//        Mockito.when(userService.updateUser(ArgumentMatchers.any(),ArgumentMatchers.any()))
-//                .thenReturn(userResponse);
-        //WHEN THEN
-        String userId = userRepositoryInterface.findByUsername("12345").get().getId();
-        mockMvc.perform(MockMvcRequestBuilders
-                        .put("/"+userId)
+        String adminId = userRepositoryInterface.findByUsername("admin").get().getId();
+        // WHEN THEN
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/" + adminId)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .content(request))
                 .andExpect(MockMvcResultMatchers.status().isOk())
-//                .andExpect(MockMvcResultMatchers.jsonPath("result.id").value("test01010101"))
-//                .andExpect(MockMvcResultMatchers.jsonPath("result.firstName").value("Ad"))
+        //                .andExpect(MockMvcResultMatchers.jsonPath("result.id").value("test01010101"))
+        //                .andExpect(MockMvcResultMatchers.jsonPath("result.firstName").value("Ad"))
         ;
-
     }
-//
-//    @Test
-//    @WithMockUser(username = "test01010101", roles = {"USER"})
-//    void getUser_successful() throws Exception {
-//        //GIVEN
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        objectMapper.registerModule(new JavaTimeModule());
-//        String request = objectMapper.writeValueAsString(userCreateRequest);
-//
-//        Mockito.when(userService.getUser()).thenReturn(userResponseList);
-//        //WHEN THEN
-//        mockMvc.perform(MockMvcRequestBuilders
-//                        .get("/users")
-//                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-//                        .content(request))
-//                .andExpect(MockMvcResultMatchers.status().isOk());
-//
-//    }
-//
-//    @Test
-//    @WithMockUser(username = "test01010101", roles = {"USER"})
-//    void getUserById_successful() throws Exception {
-//        //GIVEN
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        objectMapper.registerModule(new JavaTimeModule());
-//        String request = objectMapper.writeValueAsString(userCreateRequest);
-//
-//        Mockito.when(userService.getUser(ArgumentMatchers.any())).thenReturn(userResponse);
-//
-//        //WHEN THEN
-//        mockMvc.perform(MockMvcRequestBuilders
-//                        .get("/test01010101")
-//                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-//                        .content(request))
-//                .andExpect(MockMvcResultMatchers.status().isOk());
-//
-//    }
-//
-//    @Test
-//    @WithMockUser(username = "test01010101", roles = {"USER"})
-//    void getMyInfo_successful() throws Exception {
-//        //GIVEN
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        objectMapper.registerModule(new JavaTimeModule());
-//        String request = objectMapper.writeValueAsString(userCreateRequest);
-//
-//        Mockito.when(userService.getMyInfo()).thenReturn(userResponse);
-//
-//        //WHEN THEN
-//        mockMvc.perform(MockMvcRequestBuilders
-//                        .get("/myInfo")
-//                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-//                        .content(request))
-//                .andExpect(MockMvcResultMatchers.status().isOk())
-//                .andExpect(MockMvcResultMatchers.jsonPath("result.id").value("test01010101"));
-//
-//
-//    }
-
-
-
-
-
-
-
 }

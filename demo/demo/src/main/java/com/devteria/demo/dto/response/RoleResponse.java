@@ -1,10 +1,9 @@
 package com.devteria.demo.dto.response;
 
-import com.devteria.demo.entity.Permission;
+import java.util.Set;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
