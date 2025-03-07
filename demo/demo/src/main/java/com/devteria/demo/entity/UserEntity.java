@@ -1,6 +1,8 @@
 package com.devteria.demo.entity;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import jakarta.persistence.*;
@@ -18,8 +20,10 @@ public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
-    @Column(name = "username", unique = true , columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
+
+    @Column(name = "username", unique = true, columnDefinition = "VARCHAR(255) COLLATE utf8mb4_unicode_ci")
     String username;
+
     String password;
     String firstName;
     String lastName;
@@ -27,4 +31,6 @@ public class UserEntity {
 
     @ManyToMany
     Set<Role> roles;
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
+    List<Order> orderList= new ArrayList<>();
 }

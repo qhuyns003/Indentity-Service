@@ -36,11 +36,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Slf4j
 public class AuthenticationService {
     final UserRepositoryInterface userRepository;
     final RoleRepository roleRepository;
@@ -60,6 +62,7 @@ public class AuthenticationService {
     int refreshDuration;
 
     public String authenticateUser(AuthenticationRequest authenticationRequest) {
+        log.info(signerKey);
         UserEntity userEntity = userRepository
                 .findByUsername(authenticationRequest.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));

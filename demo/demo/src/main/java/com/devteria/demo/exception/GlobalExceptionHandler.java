@@ -6,11 +6,13 @@ import java.util.Objects;
 import jakarta.validation.ConstraintViolation;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.devteria.demo.configuration.Translator;
 import com.devteria.demo.dto.response.ApiResponse;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,10 +34,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse<Object>> handleUserExistedException(AppException e) {
+    ResponseEntity<ApiResponse<Object>> handleAppException(AppException e) {
         ApiResponse<Object> apiResponse = ApiResponse.builder()
                 .code(e.getErrorCode().getCode())
-                .message(e.getErrorCode().getMessage())
+                .message(Translator.toLocale(e.getErrorCode().getMessage()))
                 .build();
         return ResponseEntity.status(e.getErrorCode().getHttpStatus()).body(apiResponse);
     }
@@ -47,6 +49,15 @@ public class GlobalExceptionHandler {
                 .message(ErrorCode.ACCESS_DENIED.getMessage())
                 .build();
         return ResponseEntity.status(ErrorCode.ACCESS_DENIED.getHttpStatus()).body(apiResponse);
+    }
+
+    @ExceptionHandler(value = HttpMessageNotReadableException.class)
+    ResponseEntity<ApiResponse<Object>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        ApiResponse<Object> apiResponse = ApiResponse.builder()
+                .code(ErrorCode.DATETIME_INVALID.getCode())
+                .message(ErrorCode.DATETIME_INVALID.getMessage())
+                .build();
+        return ResponseEntity.status(ErrorCode.DATETIME_INVALID.getHttpStatus()).body(apiResponse);
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)

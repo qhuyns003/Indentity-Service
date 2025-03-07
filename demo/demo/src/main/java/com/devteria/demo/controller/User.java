@@ -13,6 +13,7 @@ import com.devteria.demo.dto.response.ApiResponse;
 import com.devteria.demo.dto.response.UserResponse;
 import com.devteria.demo.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -21,6 +22,7 @@ public class User {
     @Autowired
     private UserService userService;
 
+    @Operation(summary = "create user", description = "create user")
     @PostMapping("/users")
     ApiResponse<UserResponse> createUser(@Valid @RequestBody UserCreateRequest userCreateRequest) {
         return ApiResponse.<UserResponse>builder()

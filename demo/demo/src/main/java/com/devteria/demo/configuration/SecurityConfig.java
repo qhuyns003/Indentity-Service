@@ -17,8 +17,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
-import java.util.List;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -27,7 +25,12 @@ public class SecurityConfig {
     private final JwtDecoder jwtDecoder;
 
     static final String[] PUBLIC_ENDPOINT = {
-        "/users", "/auth/log-in", "/auth/introspect", "/auth/logout", "/auth/refresh"
+        "/users", "/auth/log-in", "/auth/introspect", "/auth/logout", "/auth/refresh",
+    };
+    static final String[] SWAGGER_ENDPOINT = {
+        "/v3/api-docs/**", // Mở API docs
+        "/swagger-ui/**", // Mở Swagger UI
+        "/swagger-ui.html"
     };
 
     public SecurityConfig(JwtDecoder jwtDecoder) {
@@ -37,6 +40,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINT)
+                .permitAll()
+                .requestMatchers(SWAGGER_ENDPOINT)
                 .permitAll()
                 //                        .requestMatchers(HttpMethod.GET,"/users")
                 //                        .hasAuthority("ROLE_ADMIN")

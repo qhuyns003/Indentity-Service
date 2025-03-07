@@ -4,7 +4,10 @@ import java.time.LocalDate;
 
 import jakarta.validation.constraints.Size;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.devteria.demo.validator.DobConstraint;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +29,8 @@ public class UserCreateRequest {
     String firstName;
     String lastName;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    @JsonFormat(pattern = "MM/dd/yyyy")
     @DobConstraint(min = 18, message = "DOB_INVALID")
     LocalDate dob;
 }

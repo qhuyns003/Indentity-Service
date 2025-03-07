@@ -100,6 +100,7 @@ class UserServiceTest {
         // GIVEN
         Mockito.when(userRepository.existsByUsername(ArgumentMatchers.any())).thenReturn(false);
         Mockito.when(userRepository.save(ArgumentMatchers.any())).thenReturn(user);
+        Mockito.when(roleRepository.findById(ArgumentMatchers.any())).thenReturn(Optional.of(role));
 
         // WHEN
         var response = userService.createUser(userCreateRequest);
