@@ -31,6 +31,7 @@ public class UserEntity {
 
     @ManyToMany
     Set<Role> roles;
-    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY)
-    List<Order> orderList= new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    List<Orders> ordersList = new ArrayList<>();
 }
